@@ -52,6 +52,10 @@ export default class RegisterBank16 {
             return strRes;
         }, '');    
     }
+
+    clear(): void {
+        this.memory.clear();
+    }
 }
 
 interface RegisterMap {

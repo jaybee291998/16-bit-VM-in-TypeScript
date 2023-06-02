@@ -3,40 +3,159 @@ import RegisterBank16 from './registerbank.js';
 import CPU from './cpu.js';
 import instructions from './instructions.js';
 
-const ram = new Memory(256);
+const ram = new Memory(256*256);
 const cpu = new CPU(ram);
-
-ram.setUint8(0, instructions.MOV_LIT_R1);
-ram.setUint8(1, 0x12);
-ram.setUint8(2, 0x34);
-
-ram.setUint8(3, instructions.MOV_LIT_R2);
-ram.setUint8(4, 0xAB);
-ram.setUint8(5, 0xCD);
-
-ram.setUint8(6, instructions.ADD_REG_REG);
-ram.setUint8(7, 2);
-ram.setUint8(8, 3);
-
-
+let acc = 1;
+let r1 = 2;
+let r2 = 3;
+let r3 = 4;
+// loadLoop(ram);
+loadMultiplyProgram(ram);
+let btn = document.getElementById('step') as HTMLButtonElement;
+let runBtn = document.getElementById('run') as HTMLButtonElement;
 console.log(cpu.dumpRegisters());
-cpu.step();
+console.log(cpu.peek());
+console.log(cpu.viewMemoryAt(0x4545));
 
-console.log(cpu.dumpRegisters());
-cpu.step();
+function step():void {
+    if(!cpu.isCPUHalted()) {
+        cpu.step();
+        console.log(cpu.dumpRegisters());
+        console.log(cpu.peek());
+        console.log(cpu.viewMemoryAt(0x4545));
+    }
+}
 
-console.log(cpu.dumpRegisters());
-cpu.step();
+function run(): void {
+    console.time('looper')
+    console.log(cpu.dumpRegisters());
+    console.log(cpu.peek());
+    while(!cpu.isCPUHalted()) {
+        cpu.step();
+    }
+    console.log(cpu.dumpRegisters());
+    console.log(cpu.peek());
+    console.timeEnd('looper')
 
-console.log(cpu.dumpRegisters());
+}
 
-// ram.setUint8(0, )
-// const ram: Memory = new Memory(8);
-// ram.setUint8(0, 0x45);
-// console.log(ram.getUint8(0))
+btn.addEventListener('click', step);
+runBtn.addEventListener('click', run);
 
-// const registers = new RegisterBank16(['ip', 'acc', 'r1', 'r2']);
+function loadLoop(memory: Memory): void {
+    let i = 0;
+    ram.setUint8(i++, instructions.MOV_LIT_REG);
+    ram.setUint8(i++, 0x00);
+    ram.setUint8(i++, 0x01);
+    ram.setUint8(i++, r1);
+    
+    ram.setUint8(i++, instructions.MOV_MEM_REG);
+    ram.setUint8(i++, 0x01);
+    ram.setUint8(i++, 0x00);
+    ram.setUint8(i++, r2);
+    
+    ram.setUint8(i++, instructions.ADD_REG_REG);
+    ram.setUint8(i++, r1);
+    ram.setUint8(i++, r2);
+    
+    ram.setUint8(i++, instructions.MOV_REG_MEM);
+    ram.setUint8(i++, acc);
+    ram.setUint8(i++, 0x01);
+    ram.setUint8(i++, 0x00);
+    
+    ram.setUint8(i++, instructions.JMP_NOT_EQ);
+    ram.setUint8(i++, 0x00);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x00);
+    ram.setUint8(i++, 0x04);
+    ram.setUint8(i++, instructions.HALT);
+}
 
-// registers.setRegister('r1', 0x45);
-// const regVal = registers.getRegister('r1');
-// console.log({regVal})
+function loadMultiplyProgram(ram: Memory): void {
+    let i = 0;
+    cpu.reset();
+    ram.clear();
+
+    // load 1 to r1
+    ram.setUint8(i++, instructions.MOV_LIT_REG);
+    ram.setUint8(i++, 0x00);
+    ram.setUint8(i++, 0x01);
+    ram.setUint8(i++, r1);
+
+    // load r1 to 0x4545
+    ram.setUint8(i++, instructions.MOV_REG_MEM);
+    ram.setUint8(i++, r1);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x45);
+
+    // loaded value to be added to itself
+    ram.setUint8(i++, instructions.MOV_LIT_REG);
+    ram.setUint8(i++, 0x00);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, r1);
+
+    ram.setUint8(i++, instructions.MOV_REG_MEM);
+    ram.setUint8(i++, r1);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x49);
+
+    ram.setUint8(i++, instructions.MOV_LIT_REG);
+    ram.setUint8(i++, 0x00);
+    ram.setUint8(i++, 0x00);
+    ram.setUint8(i++, r1);
+
+    ram.setUint8(i++, instructions.MOV_REG_MEM);
+    ram.setUint8(i++, r1);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x4b);
+
+    ram.setUint8(i++, instructions.MOV_MEM_REG);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x47);
+    ram.setUint8(i++, r2);
+
+    ram.setUint8(i++, instructions.MOV_MEM_REG);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x49);
+    ram.setUint8(i++, r1);
+
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x47);
+    ram.setUint8(i++, r2);
+
+    ram.setUint8(i++, instructions.ADD_REG_REG);
+    ram.setUint8(i++, r1);
+    ram.setUint8(i++, r2);
+
+    ram.setUint8(i++, instructions.MOV_REG_MEM);
+    ram.setUint8(i++, acc);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x46);
+
+    ram.setUint8(i++, instructions.MOV_MEM_REG);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, r1);
+
+    ram.setUint8(i++, instructions.MOV_MEM_REG);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x4b);
+    ram.setUint8(i++, r2);
+
+    ram.setUint8(i++, instructions.ADD_REG_REG);
+    ram.setUint8(i++, r1);
+    ram.setUint8(i++, r2);
+
+    ram.setUint8(i++, instructions.MOV_REG_MEM);
+    ram.setUint8(i++, acc);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x4b);
+
+    ram.setUint8(i++, instructions.JMP_NOT_EQ);
+    ram.setUint8(i++, 0x00);
+    ram.setUint8(i++, 0x45);
+    ram.setUint8(i++, 0x00);
+    ram.setUint8(i++, 0x16);
+
+    ram.setUint8(i++, instructions.HALT);
+}

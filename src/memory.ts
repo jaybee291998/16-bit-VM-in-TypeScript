@@ -39,4 +39,26 @@ export default class Memory {
 
         this.dataView.setUint16(addr, value);
     }
+
+    viewMemoryAt(address: number, width: number): string {
+        if(address >= this.sizeInBytes) {
+            throw new Error(`viewMemoryAt: address out of bounds ${address}`);
+        }
+
+        let lastAddress = address + width;
+        if(lastAddress >= this.sizeInBytes) {
+            lastAddress = this.sizeInBytes - 1;
+        }
+        let result = `0x${address.toString(16).padStart(4, '0')}: `;
+        for(let i = address; i <= lastAddress; i++) {
+            result += `0x${this.dataView.getUint8(i).toString(16).padStart(2, '0')} `;
+        }
+        return result;
+    }
+
+    clear(): void {
+        for(let i = 0; i < this.sizeInBytes; i++) {
+            this.dataView.setUint8(i, 0);
+        }
+    }
 }

@@ -6,6 +6,7 @@ export default class CPU {
     private ram: Memory;
     private registers: RegisterBank16;
     private registerNames: string[] = ['ip', 'acc', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8'];
+    private isHalt: boolean = false;
     constructor(ram: Memory) {
         this.ram = ram;
         this.registers = new RegisterBank16(this.registerNames);
@@ -27,17 +28,40 @@ export default class CPU {
 
     execute(instruction: number): void {
         switch(instruction) {
-            // move literal into r1
-            case instructions.MOV_LIT_R1: {
+            // move literal into reg
+            case instructions.MOV_LIT_REG: {
                 const literal = this.fetch16();
-                this.registers.setRegister('r1', literal);
+                const registerIndex = this.fetch8();
+                this.registers.setRegisterByIndex(registerIndex, literal);
                 return;
             }
-            case instructions.MOV_LIT_R2: {
-                const literal = this.fetch16();
-                this.registers.setRegister('r2', literal);
+            // move reg to reg
+            case instructions.MOV_REG_REG: {
+                const fromRegIndex = this.fetch8();
+                const toRegIndex = this.fetch8();
+                const fromRegValue = this.registers.getRegisterByIndex(fromRegIndex);
+                this.registers.setRegisterByIndex(toRegIndex, fromRegValue);
                 return;
             }
+
+            // move from reg to mem
+            case instructions.MOV_REG_MEM: {
+                const regIndex = this.fetch8();
+                const address = this.fetch16();
+                const regValue = this.registers.getRegisterByIndex(regIndex);
+                this.ram.setUint16(address, regValue);
+                return;
+            }
+
+            // move from mem to reg
+            case instructions.MOV_MEM_REG: {
+                const memAddress = this.fetch16();
+                const memValue = this.ram.getUint16(memAddress);
+                const regIndex = this.fetch8();
+                this.registers.setRegisterByIndex(regIndex, memValue);
+                return;
+            }
+
             case instructions.ADD_REG_REG: {
                 const r1 = this.fetch8();
                 const r2 = this.fetch8();
@@ -46,17 +70,53 @@ export default class CPU {
                 this.registers.setRegister('acc', registerValue1 + registerValue2);
                 return;
             }
+
+            // jump not equal
+            case instructions.JMP_NOT_EQ: {
+                const literal = this.fetch16();
+                const address = this.fetch16();
+
+                if(literal != this.registers.getRegister('acc')) {
+                    this.registers.setRegister('ip', address);
+                }
+                return;
+            }
+
+            // halt
+            case instructions.HALT: {
+                this.isHalt = true;
+                return;
+            }
             default:
                 return;
         }
     }
 
     step(): void {
+        if(this.isHalt){
+            throw new Error(`the CPU is halted`)
+        }
         const instruction = this.fetch8();
         this.execute(instruction);
     }
 
+    isCPUHalted():boolean {
+        return this.isHalt;
+    }
+
     dumpRegisters(): string {
         return this.registers.dump();
+    }
+
+    peek(): string {
+        return this.ram.viewMemoryAt(this.registers.getRegister('ip'), 8);
+    }
+
+    viewMemoryAt(address: number): string {
+        return this.ram.viewMemoryAt(address, 8);
+    }
+
+    reset(): void {
+        this.registers.clear();
     }
 }

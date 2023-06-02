@@ -1,11 +1,19 @@
-const MOV_LIT_R1 = 0X10;
-const MOV_LIT_R2 = 0X11;
-const ADD_REG_REG = 0X12;
+const MOV_LIT_REG = 0x10;
+const MOV_REG_REG = 0x11;
+const MOV_REG_MEM = 0x12;
+const MOV_MEM_REG = 0x13;
+const ADD_REG_REG = 0x14;
+const JMP_NOT_EQ  = 0x15;
+const HALT        = 0xff;
 
 const instructions = {
-    MOV_LIT_R1,
-    MOV_LIT_R2,
+    MOV_LIT_REG,
+    MOV_REG_REG,
+    MOV_REG_MEM,
+    MOV_MEM_REG,
     ADD_REG_REG,
+    JMP_NOT_EQ,
+    HALT,
 }
 
 export default instructions;
