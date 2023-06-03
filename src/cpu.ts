@@ -62,6 +62,14 @@ export default class CPU {
                 return;
             }
 
+            // move lit to mem
+            case instructions.MOV_LIT_MEM: {
+                const litValue = this.fetch16();
+                const memAddr = this.fetch16();
+                this.ram.setUint16(memAddr, litValue);
+                return;
+            }
+
             case instructions.ADD_REG_REG: {
                 const r1 = this.fetch8();
                 const r2 = this.fetch8();
