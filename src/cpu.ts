@@ -5,11 +5,15 @@ import instructions from "./instructions.js";
 export default class CPU {
     private ram: Memory;
     private registers: RegisterBank16;
-    private registerNames: string[] = ['ip', 'acc', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8'];
+    private registerNames: string[] = ['ip', 'acc', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'sp', 'fp'];
     private isHalt: boolean = false;
+    private stackFrameSize: number;
     constructor(ram: Memory) {
         this.ram = ram;
         this.registers = new RegisterBank16(this.registerNames);
+        this.stackFrameSize = 0;
+        this.registers.setRegister('sp', 0xfffd);
+        this.registers.setRegister('fp', 0xfffd);
     }
 
     fetch8():number {
@@ -24,6 +28,13 @@ export default class CPU {
         const nextInstruction = this.ram.getUint16(nextIntructionAddress);
         this.registers.setRegister('ip', nextIntructionAddress + 2);
         return nextInstruction;
+    }
+
+    push(value: number): void {
+        // set the value of the memory where the stack pointer is pointing
+        this.ram.setUint16(this.registers.getRegister('sp'), value);
+        // decrement the sp
+        this.registers.setRegister('sp', this.registers.getRegister('sp') - 2);
     }
 
     execute(instruction: number): void {
@@ -87,6 +98,21 @@ export default class CPU {
                 if(literal != this.registers.getRegister('acc')) {
                     this.registers.setRegister('ip', address);
                 }
+                return;
+            }
+
+            // push a literal to the stack
+            case instructions.PUSH_LIT: {
+                const literalValue = this.fetch16();
+                this.push(literalValue);
+                return;
+            }
+
+            // push a value from a specified register
+            case instructions.PUSH_REG: {
+                const registerIndex = this.fetch8();
+                const registerValue = this.registers.getRegisterByIndex(registerIndex);
+                this.push(registerValue);
                 return;
             }
 

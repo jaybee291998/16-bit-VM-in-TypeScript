@@ -65,4 +65,14 @@ export default class InstructionLoader {
         this.ram.setUint16(this.programAddr++, addr);
         this.programAddr++;
     }
+
+    PUSH_LIT(literalValue: number) {
+        this.ram.setUint8(this.programAddr++, instructions.PUSH_LIT);
+        this.ram.setUint16(this.programAddr++, literalValue);
+    }
+
+    PUSH_REG(regIndex: number):void {
+        this.ram.setUint8(this.programAddr++, instructions.PUSH_REG);
+        this.ram.setUint8(this.programAddr++, regIndex);
+    }
 }

@@ -6,6 +6,8 @@ const ADD_REG_REG = 0x14;
 const JMP_NOT_EQ  = 0x15;
 const HALT        = 0xff;
 const MOV_LIT_MEM = 0x16;
+const PUSH_LIT    = 0x17;
+const PUSH_REG    = 0x18;
 
 const instructions = {
     MOV_LIT_REG,
@@ -16,6 +18,8 @@ const instructions = {
     JMP_NOT_EQ,
     HALT,
     MOV_LIT_MEM,
+    PUSH_LIT,
+    PUSH_REG,
 }
 
 export default instructions;

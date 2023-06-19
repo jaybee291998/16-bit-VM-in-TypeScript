@@ -19,7 +19,8 @@ const num2 = num1 + 2;
 const counter = num2 + 2;
 const result = counter + 2;
 
-il.MOV_LIT_MEM(0x0001, stepSize);
+// il.MOV_LIT_MEM(0x0001, stepSize);
+il.PUSH_LIT(0x0069);
 il.HALT();
 
 function step():void {
@@ -27,7 +28,7 @@ function step():void {
         cpu.step();
         console.log(cpu.dumpRegisters());
         // console.log(cpu.peek());
-        // console.log(cpu.viewMemoryAt(stepSize));
+        console.log(cpu.viewMemoryAt(0xfff6));
         printVariable(num1, "num1");
         printVariable(num2, "num2");
         printVariable(result, "result");
